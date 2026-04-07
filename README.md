@@ -1,47 +1,123 @@
 # de-x.py
 
-**This script can be used to delete the whole history of your tweets, retweets and replies.**
+[English](README.md) | [简体中文](README.zh-CN.md)
 
-As Elmo restricted access to Twitter's APIs, many tools that did the same job doesn't work anymore, without registering a developer account at X/Twitter.
+Delete your tweet history, retweets, and replies without paid API access.
 
-However, this small script does not depend on those restricted APIs. There is no need to register a developer account nor is it necessary to pay for API access. Only a few manual steps need to be carried out by the user, these steps are explained in detail below.
+## Overview
+
+Many older Twitter cleanup tools stopped working after X/Twitter restricted API access. This script takes a different route:
+
+- It reads tweet IDs from your exported Twitter archive.
+- It reuses your current browser session headers for authorization.
+- It sends delete requests directly, without requiring a developer account.
+
+## Table of Contents
+
+- [Requirements](#requirements)
+- [Quick Start](#quick-start)
+- [Preparation](#preparation)
+- [Run](#run)
+- [How It Works](#how-it-works)
+- [Notes](#notes)
+
+## Requirements
+
+- Python 3
+- `requests`
+- Your X/Twitter data archive, including `tweets.js`
+- A valid, currently logged-in browser session
+
+Install dependencies with the project virtual environment:
+
+```bash
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+If you have not created the virtual environment yet:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+## Quick Start
+
+1. Request and download your X/Twitter archive.
+2. Extract `tweets.js` from the archive.
+3. Copy your browser request headers into `request-headers.txt`.
+4. Run the script with `tweets.js` and `request-headers.txt`.
 
 ## Preparation
 
-1. Request an archive of your data at X/Twitter. This archive will be available for download after a few days (mine took like 2 days). If your data is ready for download, you'll receive a notification in your Twitter-App or via E-mail. ![Request Twitter archive at X](doc/archive.png)
-2. Once your archive has been downloaded, you need to extract the ZIP-Archive on your disk. You'll need the file called `tweets.js` that is included in the archive. It includes every tweet/reply/retweet including the corresponding tweet-ID.
-3. To enable this python script to delete posts with the tweet-IDs from your archive, you must provide session information as well, otherwise the python script will not be able to authorize. The easiest way is to get them from your browser:
-   1. Edge/Chrome: Log into X/Twitter as you used to do before. Then open developer tools by pressing `Ctrl-Shift-i`. Now switch to the *Network* tab of the Developer Tools and click on any request to show the headers. ![Copy & Paste session headers at twitter.com](doc/session.png) Just copy and paste every request header after "Accept", including the values that are redacted in this example. It is important to copy the following headers: *Cookie*, *X-Csrf-Token* and *Authorization*. But in doubt, just copy & paste all the request headers to a file on your hard-drive, e. g. `request-headers.txt`.
-   2. Firefox: Probably the same as above, PR welcome
-   3. burp suite: Just record a twitter-browser session and copy from client request headers.
-4. Check that your `request-headers.txt` is formatted correctly. You should remove some newlines that may be there by accident after copy&paste. You can also just copy&paste the values of the following three headers - a minimal request-headers-file could look like this:
-```
+### 1. Request your archive
+
+Request an archive of your data at X/Twitter. It usually takes a few days before the archive becomes available. Once it is ready, you will receive a notification in the app or by email.
+
+![Request Twitter archive at X](doc/archive.png)
+
+### 2. Extract `tweets.js`
+
+After downloading the ZIP archive, extract it locally. You will need the file named `tweets.js`, which contains every tweet, reply, and retweet together with its tweet ID.
+
+### 3. Export request headers from your browser
+
+The script also needs valid session headers from a currently logged-in browser session. Without them, X/Twitter will reject the delete requests.
+
+Browser options:
+
+1. Edge/Chrome: Log into X/Twitter, press `Ctrl-Shift-i`, open the `Network` tab, click any request, and copy the request headers.
+2. Firefox: The process should be similar.
+3. Burp Suite: Record a browser session and copy the client request headers.
+
+Copy everything after `Accept` into a local file such as `request-headers.txt`.
+
+Important headers include:
+
+- `Cookie`
+- `X-Csrf-Token`
+- `Authorization`
+
+Example minimal header file:
+
+```text
 Authorization: Bearer AAAAAAAAAAAAAAAAAAAAANR[...]
 X-Csrf-Token: b0a38[...]
 Cookie: [...] _twitter_sess=BAhD[...]; auth_token=24fa[...]
 ```
 
+Make sure the copied headers do not contain accidental line breaks.
+
+![Copy & Paste session headers at twitter.com](doc/session.png)
+
 ## Run
 
-After you've received your twitter archive and edited a request-header file for a current session (as explained above), we can call our script:
+With the archive and request headers prepared, run:
 
+```bash
+source .venv/bin/activate
+python de-x.py tweets.js request-headers.txt
 ```
-de-x.py tweets.js request-headers.txt
+
+You can also run it directly with system Python if the dependency is installed:
+
+```bash
+python3 de-x.py tweets.js request-headers.txt
 ```
 
-## Background
+## How It Works
 
-If you know the tweet-id, you can delete the corresponding tweet by calling an API with that specific ID, and no rate limiting will be in place. So the first and most important step is to get a list of all tweets (and thus tweet-ids) that shall be deleted. You can do this, using twitter-APIs, but these APIs are restricted and you have to pay for it. Even if you pay for it, there are quite a few limitations and you might not be able to gather a list of all of your tweets.
+If you know a tweet ID, you can send a delete request for that specific tweet. The main challenge is therefore collecting all relevant tweet IDs first.
 
-Thus, it is easier to simply request an archive of all tweets that you have posted so far. This dataset includes all meta-data and, of course, also the tweet-id we are looking for in the first place. You don't have to pay for it, it is complete and machine readable: win.
+Instead of relying on restricted Twitter APIs, this script reads the IDs from your personal archive. The archive is complete, free, and machine-readable. Once the tweet IDs are loaded, the script sends authenticated delete requests using your current session headers.
 
-The archive contains a file called `tweets.js` which is basically a JSON encoded data structure, a list of all of your tweets.
+## Notes
 
-Twitter's `DeleteTweet` API is not restricted, and can be called without registering a developer account at X. Using this approach, you can at least delete around 3000 tweets in roughly 30 min (*).
+- This is not a one-click tool. You still need to export your archive and copy valid request headers manually.
+- Session headers can expire. If requests start failing, refresh the headers from a new logged-in browser session.
+- The script depends on X/Twitter's current internal request flow, which may change over time.
+- Historically, this approach was fast enough to delete thousands of tweets in a relatively short time.
 
-(*) while sitting in a high-speed train of *Deutsche Bahn* somewhere between Amsterdam and Hamburg, using 4G network.
-
-## Conclusion
-
-There is no *One Click Delete Everything* tool available and it never will. This is due to Twitter's massive restrictions on using their APIs to control your own data. Of course, they would like to keep your data. Forever. However, If you don't want your data being archived at Twitter until global heat finally also kills all machines on planet earth, you should spend some time and effort to delete them - free of charge. Maybe it is possible to build a *One Click Delete Everything* tool using this approach, and maybe it is even user-friendly. I know, the one above is not user friendly, but hopefully this readme is, and hopefully it enables your daughter/neighbor/friend to assist with deleting stuff from the Internet that you don't want to see there anymore. In my opinion, everyone should have the right and the opportunity to delete their own content from the Internet without problems, without barriers and without paying money; regardless of their origin.
-
+If you want to remove old content from the platform without paying for API access, this project gives you a lightweight, transparent way to do it.

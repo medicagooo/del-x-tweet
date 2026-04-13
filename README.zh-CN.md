@@ -1,56 +1,75 @@
-# de-x.py
+<div align="center">
+  <h1>de-x</h1>
+  <p><strong>无需付费 API 权限，删除你的推文、转推和回复历史。</strong></p>
+  <p>
+    <a href="README.md">English</a> ·
+    <a href="README.zh-CN.md">简体中文</a>
+  </p>
+  <p>
+    <a href="#python-脚本版"><strong>Python 脚本版</strong></a> ·
+    <a href="#chrome-扩展版"><strong>Chrome 扩展版</strong></a> ·
+    <a href="extension/README.zh-CN.md"><strong>扩展说明</strong></a>
+  </p>
+  <p>
+    <img alt="Python 脚本版" src="https://img.shields.io/badge/Workflow-Python%20Script-1f6feb?style=flat-square">
+    <img alt="Chrome 扩展版" src="https://img.shields.io/badge/Workflow-Chrome%20Extension-0f766e?style=flat-square">
+    <img alt="仅本地运行" src="https://img.shields.io/badge/Execution-Local%20Only-475569?style=flat-square">
+  </p>
+</div>
 
-[English](README.md) | [简体中文](README.zh-CN.md)
+这个仓库现在提供两种使用方式：
 
-无需付费 API 权限，删除你的推文、转推和回复历史。
+- Python 脚本版：在本地终端里执行删除
+- Chrome 扩展原型：在浏览器控制面板里执行删除
 
-## 概览
-
-很多旧的 Twitter 清理工具在 X/Twitter 收紧 API 访问后已经失效。这个脚本采用了另一种方式：
-
-- 从你导出的 Twitter 数据归档中读取 tweet ID。
-- 复用你当前浏览器会话中的请求头进行授权。
-- 直接发送删除请求，不需要开发者账号。
+扩展目录在 [`extension/`](extension/README.zh-CN.md)。
 
 ## 目录
 
-- [依赖要求](#依赖要求)
-- [快速开始](#快速开始)
-- [准备工作](#准备工作)
-- [运行](#运行)
+- [概览](#概览)
+- [选择使用方式](#选择使用方式)
+- [通用准备工作](#通用准备工作)
+- [Python 脚本版](#python-脚本版)
+- [Chrome 扩展版](#chrome-扩展版)
 - [实现原理](#实现原理)
 - [注意事项](#注意事项)
 
-## 依赖要求
+## 概览
+
+很多旧的 Twitter 清理工具在 X/Twitter 收紧 API 访问后已经失效。这个项目采用了另一种方式：
+
+- 从你导出的 Twitter 数据归档中读取 tweet ID
+- 复用你当前浏览器里的已登录会话
+- 直接发送删除请求，不依赖付费开发者 API
+
+## 选择使用方式
+
+### 方案 1：Python 脚本版
+
+适合喜欢在终端里运行任务的人。
+
+你需要准备：
 
 - Python 3
 - `requests`
-- 你的 X/Twitter 数据归档，其中包含 `tweets.js`
+- 包含 `tweets.js` 的 X/Twitter 数据归档
 - 一个当前仍然登录中的浏览器会话
+- `Authorization`、`X-Csrf-Token` 和 `Cookie`
 
-使用项目自带虚拟环境安装依赖：
+### 方案 2：Chrome 扩展原型
 
-```bash
-source .venv/bin/activate
-pip install -r requirements.txt
-```
+适合希望在浏览器里看到日志、进度和恢复按钮的人。
 
-如果你还没有创建虚拟环境，可以这样初始化：
+你需要准备：
 
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
+- Google Chrome 或 Microsoft Edge
+- 一个保持登录状态的 `x.com` 标签页
+- 包含 `tweets.js` 的 X/Twitter 数据归档
+- 一个有效的 `Authorization` bearer token
 
-## 快速开始
+扩展会直接复用当前 `x.com` 标签页里的 Cookie 和 CSRF token，所以不需要在控制面板里再手动填写这两项。
 
-1. 在 X/Twitter 申请并下载你的数据归档。
-2. 从归档中解压出 `tweets.js`。
-3. 将浏览器请求头复制到 `request-headers.txt`。
-4. 使用 `tweets.js` 和 `request-headers.txt` 运行脚本。
-
-## 准备工作
+## 通用准备工作
 
 ### 1. 申请你的数据归档
 
@@ -64,7 +83,7 @@ pip install -r requirements.txt
 
 ### 3. 从浏览器导出请求头
 
-脚本还需要一个当前有效、已登录浏览器会话中的请求头。如果没有这些请求头，X/Twitter 会拒绝删除请求。
+你需要从当前已登录的浏览器会话里拿到有效的认证信息。
 
 浏览器获取方式：
 
@@ -72,52 +91,139 @@ pip install -r requirements.txt
 2. Firefox：流程基本类似。
 3. Burp Suite：录制浏览器访问会话，然后复制客户端请求头。
 
-将 `Accept` 之后的请求头复制到本地文件，例如 `request-headers.txt`。
-
 关键请求头包括：
 
-- `Cookie`
-- `X-Csrf-Token`
 - `Authorization`
+- `X-Csrf-Token`
+- `Cookie`
 
-一个最小可用示例：
+对 Python 脚本版来说，这三项会写进 `.env`。
 
-```text
-Authorization: Bearer AAAAAAAAAAAAAAAAAAAAANR[...]
-X-Csrf-Token: b0a38[...]
-Cookie: [...] _twitter_sess=BAhD[...]; auth_token=24fa[...]
-```
+对 Chrome 扩展版来说，只需要手动提供 `Authorization`；Cookie 和 CSRF token 会直接复用当前打开的 `x.com` 标签页。
 
-请确认复制结果中没有多余换行。
+请确认复制出来的值都保持在单独一行里，不要出现额外换行。
 
 ![在 twitter.com 中复制请求头](doc/session.png)
 
-## 运行
+## Python 脚本版
 
-准备好归档和请求头文件后，执行：
+### 1. 安装依赖
 
-```bash
-source .venv/bin/activate
-python de-x.py tweets.js request-headers.txt
-```
-
-如果你使用系统 Python 并已经安装了依赖，也可以直接运行：
+如果仓库里已经有 `.venv`，直接安装依赖：
 
 ```bash
-python3 de-x.py tweets.js request-headers.txt
+cd /home/medicago/projects/del-x-tweet
+.venv/bin/pip install -r requirements.txt
 ```
+
+如果你还没有虚拟环境：
+
+```bash
+cd /home/medicago/projects/del-x-tweet
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+```
+
+### 2. 创建 `.env`
+
+先复制模板：
+
+```bash
+cd /home/medicago/projects/del-x-tweet
+cp .env.example .env
+```
+
+然后编辑 `.env`，填入你的值：
+
+```dotenv
+TWEETS_FILE=twitter/data/tweets.js
+PROGRESS_FILE=.delete-progress.json
+RATE_LIMIT_CHECK_INTERVAL_SECONDS=300
+AUTHORIZATION="Bearer AAAAAAAAAAAAAAAAAAAAANR[...]"
+X_CSRF_TOKEN="b0a38[...]"
+COOKIE="ct0=...; auth_token=..."
+```
+
+### 3. 运行脚本
+
+用下面这条命令启动，并在终端里实时看到日志：
+
+```bash
+cd /home/medicago/projects/del-x-tweet
+.venv/bin/python -u de-x.py 2>&1 | tee -a delete-live.log
+```
+
+### 4. 中断后继续运行
+
+脚本会把进度保存到 `.delete-progress.json`。
+
+如果进程中断了，重新执行同一条命令即可：
+
+```bash
+cd /home/medicago/projects/del-x-tweet
+.venv/bin/python -u de-x.py 2>&1 | tee -a delete-live.log
+```
+
+它会从保存的索引继续，而不是重新从头开始。
+
+### 5. 兼容旧用法
+
+如果你还是想单独维护请求头文件，也可以继续使用旧命令：
+
+```bash
+cd /home/medicago/projects/del-x-tweet
+.venv/bin/python de-x.py tweets.js request-headers.txt
+```
+
+## Chrome 扩展版
+
+仓库里也带了一个本地 Chrome 扩展原型，目录在 [`extension/`](extension/README.zh-CN.md)。
+
+### 1. 在 Chrome 中加载
+
+1. 打开 `chrome://extensions`
+2. 开启 `开发者模式`
+3. 点击 `加载已解压的扩展程序`
+4. 选择本仓库中的 `extension/` 目录
+
+### 2. 准备浏览器
+
+1. 打开 `x.com`
+2. 登录你的账号
+3. 在删除过程中保持这个 `x.com` 标签页处于打开状态
+
+### 3. 启动一个新任务
+
+1. 点击扩展图标打开控制面板
+2. 点击 `Use Current X Tab`
+3. 粘贴 `Authorization` bearer token
+4. 如果你复制的是完整 cURL 或请求头文本，就粘贴到辅助输入框，然后点击 `Extract Authorization`
+5. 上传你的 `tweets.js`
+6. 如有需要，设置限流检查间隔
+7. 点击 `Start Fresh`
+
+### 4. 恢复之前的任务
+
+如果控制面板被关掉，或者运行过程中停了：
+
+1. 重新打开扩展控制面板
+2. 确认 `x.com` 标签页仍然打开并保持登录
+3. 点击 `Use Current X Tab`
+4. 确认 `Authorization` token 仍然存在
+5. 点击 `Resume Saved Job`
+
+扩展会把进度、日志和下一个索引保存到 `chrome.storage.local` 中。
 
 ## 实现原理
 
-只要知道某条推文的 tweet ID，就可以对这条推文发起删除请求。所以最关键的问题，其实是先拿到所有要删除内容的 tweet ID。
+只要知道某条推文的 tweet ID，就可以对这条推文发起删除请求。最关键的问题，是先拿到所有要删除内容的 tweet ID。
 
-这个脚本不依赖受限的 Twitter API，而是直接从你自己的数据归档中读取这些 ID。归档是完整的、免费的、机器可读的。拿到 ID 后，脚本再带着你当前浏览器会话中的请求头，逐条发送认证后的删除请求。
+这个项目不依赖受限的 Twitter API，而是直接从你自己的数据归档中读取这些 ID。归档是完整的、免费的、机器可读的。拿到 ID 后，脚本或扩展再利用你当前的登录会话去逐条发送删除请求。
 
 ## 注意事项
 
-- 这不是一个真正意义上的“一键删除”工具，你仍然需要手动导出归档并复制请求头。
-- 会话请求头会过期。如果删除请求开始失败，请重新从浏览器里复制一份新的请求头。
-- 这个脚本依赖 X/Twitter 当前的内部请求方式，未来平台变更后可能失效。
+- 这不是一个真正意义上的“一键删除”工具，你仍然需要手动导出归档并提供有效认证信息。
+- 会话信息会过期。如果请求开始失败，请从新的已登录浏览器会话中重新获取。
+- 这个项目依赖 X/Twitter 当前的内部请求方式，未来平台变更后可能失效。
+- 大批量删除时出现限流是正常现象，脚本版和扩展版都支持等待后继续执行。
 - 按照过去的经验，这种方式可以在较短时间内删除数千条推文。
-
-如果你想在不支付 API 费用的前提下清理旧内容，这个项目提供了一种轻量、透明的实现方式。

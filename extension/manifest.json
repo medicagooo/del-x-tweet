@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "de-x Tweet Cleaner",
+  "version": "0.1.0",
+  "description": "Delete tweet history from an authenticated X tab using your exported archive.",
+  "permissions": [
+    "storage",
+    "tabs",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://x.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "de-x"
+  },
+  "options_page": "dashboard.html"
+}

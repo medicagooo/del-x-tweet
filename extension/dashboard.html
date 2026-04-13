@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>de-x Dashboard</title>
+    <link rel="stylesheet" href="dashboard.css">
+  </head>
+  <body>
+    <div class="grain"></div>
+    <header class="hero">
+      <div class="eyebrow">Chrome Extension Prototype</div>
+      <h1>de-x Dashboard</h1>
+      <p>
+        Load your <code>tweets.js</code>, point the extension at a logged-in
+        <code>x.com</code> tab, and run the same delete flow without leaving the browser.
+      </p>
+    </header>
+
+    <main class="layout">
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Target Tab</h2>
+          <div class="button-row">
+            <button id="use-current-tab-btn" type="button">Use Current X Tab</button>
+            <button id="open-x-btn" class="secondary" type="button">Open X</button>
+          </div>
+        </div>
+        <p id="tab-summary" class="summary">
+          No X tab selected yet.
+        </p>
+        <p class="hint">
+          Keep one logged-in <code>x.com</code> tab open while deleting. The extension
+          uses that tab's local session and does not export your cookies.
+        </p>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Authorization</h2>
+        </div>
+        <label class="field">
+          <span>Bearer token</span>
+          <textarea
+            id="authorization-input"
+            rows="4"
+            placeholder="Bearer AAAAAAAAAAAAAAAAAAAA..."
+          ></textarea>
+        </label>
+        <label class="field">
+          <span>Paste cURL or raw request headers to extract the token</span>
+          <textarea
+            id="helper-input"
+            rows="5"
+            placeholder="curl 'https://x.com/i/api/graphql/...'
+-H 'authorization: Bearer ...'"
+          ></textarea>
+        </label>
+        <div class="button-row">
+          <button id="extract-auth-btn" class="secondary" type="button">
+            Extract Authorization
+          </button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Archive</h2>
+        </div>
+        <label class="field">
+          <span>Upload <code>tweets.js</code></span>
+          <input id="tweets-file-input" type="file" accept=".js,.json,application/json,text/javascript">
+        </label>
+        <p id="file-summary" class="summary">
+          No archive loaded yet.
+        </p>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Run Controls</h2>
+        </div>
+        <div class="field-grid">
+          <label class="field compact">
+            <span>Rate-limit check interval (seconds)</span>
+            <input id="rate-limit-input" type="number" min="1" step="1" value="300">
+          </label>
+          <label class="field compact">
+            <span>Delay between successful deletes (ms)</span>
+            <input id="delay-input" type="number" min="0" step="100" value="0">
+          </label>
+        </div>
+        <div class="button-row wrap">
+          <button id="start-btn" type="button">Start Fresh</button>
+          <button id="resume-btn" class="secondary" type="button">Resume Saved Job</button>
+          <button id="stop-btn" class="secondary" type="button">Stop</button>
+          <button id="reset-btn" class="ghost" type="button">Reset Progress</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Progress</h2>
+          <div id="status-pill" class="status-pill idle">Idle</div>
+        </div>
+        <div class="stats">
+          <article class="stat-card">
+            <span class="stat-label">Processed</span>
+            <strong id="processed-value" class="stat-value">0 / 0</strong>
+          </article>
+          <article class="stat-card">
+            <span class="stat-label">Next Check</span>
+            <strong id="next-check-value" class="stat-value">None</strong>
+          </article>
+          <article class="stat-card">
+            <span class="stat-label">Last Tweet ID</span>
+            <strong id="last-tweet-value" class="stat-value">None</strong>
+          </article>
+          <article class="stat-card">
+            <span class="stat-label">Last Response</span>
+            <strong id="last-response-value" class="stat-value">None</strong>
+          </article>
+        </div>
+        <div class="progress-rail">
+          <div id="progress-fill" class="progress-fill"></div>
+        </div>
+        <p id="progress-summary" class="hint">
+          Waiting for a job to start.
+        </p>
+      </section>
+
+      <section class="panel panel-log">
+        <div class="panel-head">
+          <h2>Realtime Log</h2>
+          <button id="clear-log-btn" class="ghost" type="button">Clear Log View</button>
+        </div>
+        <div id="log-list" class="log-list">
+          <div class="log-empty">Logs will appear here once the extension starts working.</div>
+        </div>
+      </section>
+    </main>
+
+    <script src="dashboard.js"></script>
+  </body>
+</html>

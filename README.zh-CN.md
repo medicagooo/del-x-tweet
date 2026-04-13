@@ -97,13 +97,33 @@
 - `X-Csrf-Token`
 - `Cookie`
 
-对 Python 脚本版来说，这三项会写进 `.env`。
+在 Chrome 或 Edge 里，最清晰的操作流程是：
 
-对 Chrome 扩展版来说，只需要手动提供 `Authorization`；Cookie 和 CSRF token 会直接复用当前打开的 `x.com` 标签页。
+1. 打开已经登录的 `x.com`
+2. 按 `Ctrl-Shift-i` 打开开发者工具
+3. 进入 `Network`
+4. 切到 `Fetch/XHR`
+5. 用 `/i/api/` 或 `graphql` 过滤请求
+6. 点开任意一条已登录请求，查看右侧 `Headers`
+
+这时你应该能在右侧看到关键请求头：
+
+![在 DevTools 中查看请求头](doc/network-request-headers.png)
+
+接着：
+
+1. 在左侧请求列表里右键同一条请求
+2. 选择 `Copy`
+3. 选择 `Copy as cURL (bash)`
+
+![将请求复制为 cURL (bash)](doc/copy-as-curl-bash.png)
+
+复制出来的数据这样使用：
+
+- 对 Python 脚本版来说，把 `Authorization`、`X-Csrf-Token` 和 `Cookie` 提取出来写进 `.env`
+- 对 Chrome 扩展版来说，把整段 cURL 粘贴到辅助输入框里，再点击 `Extract Authorization`
 
 请确认复制出来的值都保持在单独一行里，不要出现额外换行。
-
-![在 twitter.com 中复制请求头](doc/session.png)
 
 ## Python 脚本版
 

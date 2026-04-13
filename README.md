@@ -97,13 +97,33 @@ Important headers include:
 - `X-Csrf-Token`
 - `Cookie`
 
-For the Python script, these values go into `.env`.
+In Chrome or Edge, the clearest workflow is:
 
-For the Chrome extension, only `Authorization` needs to be pasted manually. The extension uses the current `x.com` tab for the cookie and CSRF token.
+1. Open `x.com` while logged in.
+2. Press `Ctrl-Shift-i` to open DevTools.
+3. Go to `Network`.
+4. Switch to `Fetch/XHR`.
+5. Filter with `/i/api/` or `graphql`.
+6. Click one authenticated request and look at the `Headers` tab.
+
+At that point you should be able to see the key headers on the right:
+
+![Request headers in DevTools](doc/network-request-headers.png)
+
+Then:
+
+1. Right-click the same request in the left request list.
+2. Choose `Copy`.
+3. Choose `Copy as cURL (bash)`.
+
+![Copy request as cURL (bash)](doc/copy-as-curl-bash.png)
+
+How to use that copied data:
+
+- For the Python script, extract `Authorization`, `X-Csrf-Token`, and `Cookie` into `.env`.
+- For the Chrome extension, paste the full copied cURL into the helper box and click `Extract Authorization`.
 
 Make sure copied values stay on a single line without accidental line breaks.
-
-![Copy & Paste session headers at twitter.com](doc/session.png)
 
 ## Python Script Workflow
 
